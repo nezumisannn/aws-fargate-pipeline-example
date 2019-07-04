@@ -1,0 +1,47 @@
+{
+    "variables": {
+        "ecr_registry_url": "XXXXXXXXXXXX.dkr.ecr.ap-northeast-1.amazonaws.com",
+        "ecr_repository": "XXXXXXXXXXXX.dkr.ecr.ap-northeast-1.amazonaws.com/example-repo"
+    },
+    "builders": [
+        {
+            "type": "docker",
+            "image": "alpine:latest",
+            "commit": true,
+            "run_command": [
+                "-d",
+                "-t",
+                "-i",
+                "{{.Image}}",
+                "/bin/sh"
+            ],
+            "changes": [
+                "VOLUME /data",
+                "WORKDIR /data",
+                "EXPOSE 80 443",
+                "ENTRYPOINT [\"docker-entrypoint.sh\"]"
+            ]
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "ansible",
+            "user": "root",
+            "playbook_file": "./ansible/operation.yml"
+        }
+    ],
+    "post-processors": [
+        [
+            {
+                "type": "docker-tag",
+                "repository": "{{user `ecr_repository`}}",
+                "tag": "latest"
+            },
+            {
+                "type": "docker-push",
+                "ecr_login": true,
+                "login_server": "{{user `ecr_registry_url`}}"
+            }
+        ]
+    ]
+}

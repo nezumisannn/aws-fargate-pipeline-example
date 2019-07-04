@@ -1,0 +1,24 @@
+{
+    "executionRoleArn": "arn:aws:iam::XXXXXXXXXXXX:role/ecsTaskExecutionRole",
+    "containerDefinitions": [
+        {
+            "name": "nginx-web",
+            "image": "<IMAGE1_NAME>",
+            "portMappings": [
+                {
+                    "containerPort": 80,
+                    "hostPort": 80,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true
+        }
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "networkMode": "awsvpc",
+    "cpu": "256",
+    "memory": "512",
+    "family": "task-example"
+}

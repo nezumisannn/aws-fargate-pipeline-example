@@ -1,0 +1,33 @@
+---
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Install Packer"
+      - curl -qL -o packer.zip https://releases.hashicorp.com/packer/0.12.3/packer_0.12.3_linux_amd64.zip && unzip packer.zip
+      - echo "Install jq command"
+      - curl -qL -o jq https://stedolan.github.io/jq/download/linux64/jq && chmod +x ./jq
+      - echo "Install Ansible"
+      - apt-get update -y
+      - apt-get install software-properties-common -y
+      - apt-add-repository ppa:ansible/ansible -y
+      - apt-get update -y
+      - apt-get install ansible -y
+      - apt-get install openssh-client -y
+      - ansible --version
+      - echo "Varidate json"
+      - ./packer validate ./packer-build/build.json
+  build:
+    commands:
+      - echo "Setting AWS credentials"
+      - curl -qL -o aws_credentials.json http://169.254.170.2/$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI > aws_credentials.json
+      - aws configure set region ap-northeast-1
+      - aws configure set aws_access_key_id `./jq -r '.AccessKeyId' aws_credentials.json`
+      - aws configure set aws_secret_access_key `./jq -r '.SecretAccessKey' aws_credentials.json`
+      - aws configure set aws_session_token `./jq -r '.Token' aws_credentials.json`
+      - echo "Build Packer"
+      - ./packer build -debug ./packer-build/build.json
+      - printf '{"Version":"1.0","ImageURI":"%s"}' XXXXXXXXXXXX.dkr.ecr.ap-northeast-1.amazonaws.com/example-repo:latest > imageDetail.json
+artifacts:
+  files: imageDetail.json
